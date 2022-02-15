@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <title>Myzap Web 2.0</title>
+    <title>Space Web Soluções</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="format-detection" content="telephone=no">
@@ -24,7 +24,7 @@
                         </div>
 
                         <div class="entry-text" style="text-align: center;">
-                            <div class="entry-title">Myzap Web 2.0</div>
+                            <div class="entry-title">Space Web SO</div>
                             <div class="entry-subtitle">Use o WhatsApp no seu telefone para ler o qrcode</div>
                             
                             <div class="entry-controls">
@@ -51,9 +51,9 @@
 
 $(document).ready(() =>{
        
-    const SERVIDOR = `localhost:21465`
+    const SERVIDOR = `api.spacewebso.com.br:2121`
     const apitoken = `S3c_T0k3n`
-    const session = `LucasX`
+    const session = `Lucas3X`
     const sessionkey = `senha`
     const wh_connect = ``
     const wh_message = ``
@@ -71,67 +71,59 @@ $(document).ready(() =>{
     }
 
     $(`#buttonStart`).on(`click`, async () => {
-        await init(apitoken, session, sessionkey, wh_connect, wh_message, wh_status, wh_qrcode, 'start')
+        await init(apitoken, session, sessionkey, wh_connect, wh_message, wh_status, wh_qrcode)
     })
     
     async function init(){
-        var settings = {
-            "url": `http://${SERVIDOR}/api/${session}/${apitoken}/generate-token`,
-            "method": "POST",
-            "timeout": 0,
-            "headers": {
-            "Authorization": `Bearer ${sessionkey}`
-            },
+        var myHeaders = new Headers();
+        myHeaders.append("Authorization", `Bearer ${sessionkey}`);
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        redirect: 'follow'
         };
+
+        const response = await fetch(`http://${SERVIDOR}/api/${session}/S3c_T0k3n/generate-token`, requestOptions)
+        const content = await response.json()
+        console.log('init: ', content)
+        start(content)
+
+    }
+
+    async function start(content){
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        myHeaders.append("Authorization", `Bearer ${content.token}`);
+
+        var raw = JSON.stringify({
+        "webhook": null,
+        "waitQrCode": true
+        });
+
+        var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+        };
+
+        const response2 = await fetch(`http://${SERVIDOR}/api/${session}/start-session`, requestOptions)
+        const content2 = await response2.json()
+        console.log(content2.qrcode)
         
-        $.ajax(settings).done(function (response) {
-            if (response){
-                console.log(response)
-                start(response)
+        
+        socket.on(`qrCode`, (qrCode) => {
+            if(qrCode.session == session){
+                $(`#base64`).attr(`src`, qrCode?.data);
+                $(`#base64`).LoadingOverlay("hide")
+                $(`#buttonStart`).attr(`disabled`, true)
             }
-        });
+        })
     }
 
-    async function start(response){
-        var settings = {
-        "url": `http://${SERVIDOR}/api/${session}/start-session`,
-        "method": "POST",
-        "timeout": 0,
-        "headers": {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${response.token}`
-        },
-        "data": JSON.stringify({
-            "webhook": null,
-            "waitQrCode": false
-        }),
-        };
 
-        $.ajax(settings).done(function (response) {
-        console.log(response);
-        getQr(response)
-        });
-    }
-
-    async function getQr(response){
-        var settings = {
-        "url": `http://${SERVIDOR}/api/${session}/qrcode-session`,
-        "method": "POST",
-        "timeout": 0,
-        "headers": {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${response.token}`
-        },
-        "data": JSON.stringify({
-            "webhook": null,
-            "waitQrCode": false
-        }),
-        };
-
-        $.ajax(settings).done(function (response) {
-        console.log(response);
-        });
-    }
+    async function getQr(response){}
 
 });
 
