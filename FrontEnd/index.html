@@ -53,7 +53,7 @@ $(document).ready(() =>{
        
     const SERVIDOR = `api.spacewebso.com.br:2121`
     const apitoken = `S3c_T0k3n`
-    const session = `Lucas3X`
+    const session = `Lucas123`
     const sessionkey = `senha`
     const wh_connect = ``
     const wh_message = ``
@@ -73,58 +73,42 @@ $(document).ready(() =>{
     $(`#buttonStart`).on(`click`, async () => {
         await init(apitoken, session, sessionkey, wh_connect, wh_message, wh_status, wh_qrcode)
     })
-    
+
     async function init(){
-        var myHeaders = new Headers();
-        myHeaders.append("Authorization", `Bearer ${sessionkey}`);
-
-        var requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        redirect: 'follow'
-        };
-
-        const response = await fetch(`http://${SERVIDOR}/api/${session}/S3c_T0k3n/generate-token`, requestOptions)
-        const content = await response.json()
-        console.log('init: ', content)
-        start(content)
-
-    }
-
-    async function start(content){
-        var myHeaders = new Headers();
+        var myHeaders = new Headers()
         myHeaders.append("Content-Type", "application/json");
-        myHeaders.append("Authorization", `Bearer ${content.token}`);
-
-        var raw = JSON.stringify({
-        "webhook": null,
-        "waitQrCode": true
-        });
 
         var requestOptions = {
         method: 'POST',
         headers: myHeaders,
-        body: raw,
         redirect: 'follow'
         };
 
-        const response2 = await fetch(`http://${SERVIDOR}/api/${session}/start-session`, requestOptions)
-        const content2 = await response2.json()
-        console.log(content2.qrcode)
-        
-        
-        socket.on(`qrCode`, (qrCode) => {
-            if(qrCode.session == session){
-                $(`#base64`).attr(`src`, qrCode?.data);
-                $(`#base64`).LoadingOverlay("hide")
-                $(`#buttonStart`).attr(`disabled`, true)
+        const response = await fetch(`http://api.spacewebso.com.br:2121/api/${session}/${apitoken}/generate-token`, requestOptions)
+        const content = await response.json()
+        .then(async function getQr(content) {
+            myHeaders.append("Authorization", `Bearer ${content.token}`);
+
+            var requestOptionsQr = {
+            method: 'POST',
+            headers: myHeaders,
+            body: raw,
+            redirect: 'follow'
+            };
+
+            var raw = JSON.stringify({
+            "webhook": null,
+            "waitQrCode": true
+            });
+
+            const responseQrcode = await fetch(`http://api.spacewebso.com.br:2121/api/${session}/start-session`, requestOptionsQr)
+            const contentQrcode = await responseQrcode.json()
+            if (contentQrcode.qrcode == null){
+                init()
+            } else {
+                document.getElementById('base64').src = contentQrcode.qrcode
             }
         })
     }
-
-
-    async function getQr(response){}
-
 });
-
 </script>
